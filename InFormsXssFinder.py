@@ -1,4 +1,5 @@
 from robobrowser import RoboBrowser
+import string
 
 class InFormsXssFinder:
 
@@ -11,12 +12,45 @@ class InFormsXssFinder:
 
         browser.open(self.url)
 
-        forms = browser.get_forms()
-        formCount = len(forms)
+        links = browser.get_links()
+        newLink = self.getLink(links, n=0)
+        #forms = browser.get_forms()
+        #formCount = len(forms)
 
         #Code to travel all links
+        #self.goThroughAvailableHyperlinks(browser)
 
-        self.findXssInCurrentPage(browser, forms, formCount)
+        #self.findXssInCurrentPage(browser, forms, formCount)
+
+    #Recursive
+    #Pas fini
+    def goThroughAvailableHyperlinks(self, browser, nextLink, n):
+
+        if (len(browser.get_links()) == 0):
+            # self.findXssInCurrentPage()
+            # return the number of xss failures found
+            pass
+        else:
+            prefixe = 'http://testfire.net'
+            newBrowser = browser.open(nextLink)
+            links = newBrowser.get_links()
+            href = self.getLink(links, n)
+            newLink = prefixe + href
+            return self.goThroughAvailableHyperlinks(browser, newLink, n = n+1)
+
+    #Gets the correct string format to proceed
+    def getLink(self, links, n):
+
+        href = links[n].get("href")
+        if (href.startswith("../")):
+            link = href[2:]
+        elif (href.startswith("/") == False):
+            link = "/" + href
+        else:
+            link = href
+
+        return link
+
 
 
     def findXssInCurrentPage(self, browser, forms, formCount):
@@ -42,6 +76,8 @@ class InFormsXssFinder:
         else:
             # Code to change page and get new forms
             pass
+
+
 
         #Return a list with the html attribute "name=" of all elements of the form.
     def getAllFieldNames(self, formFields):
