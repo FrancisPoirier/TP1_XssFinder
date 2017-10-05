@@ -15,7 +15,9 @@ class XssFinder:
 
         browser.open(self.url)
 
-        self.goThroughAvailableHyperlinks(browser)
+        self.findXssInCurrentPage(browser)
+
+        #self.goThroughAvailableHyperlinks(browser)
 
     def goThroughAvailableHyperlinks(self, browser):
         #Use Spyder to get links of the website we want to analyse
