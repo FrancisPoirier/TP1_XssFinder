@@ -9,28 +9,25 @@ class XssFinder:
 
     ##Form generaly means inputs where you can write some text to send to the server in this code.
 
-
     def findXss(self):
         browser = RoboBrowser()
 
         browser.open(self.url)
 
-        self.findXssInCurrentPage(browser)
+        self.findXssThroughMultipleLinks(browser)
 
-        #self.goThroughAvailableHyperlinks(browser)
-
-    def goThroughAvailableHyperlinks(self, browser):
+    def findXssThroughMultipleLinks(self, browser):
         #Use Spyder to get links of the website we want to analyse
-        NUMBER_OF_PAGE_TO_CRAWL = 5
+        NUMBER_OF_PAGE_TO_CRAWL = 4
         spyder = Spyder(self.url, NUMBER_OF_PAGE_TO_CRAWL)
         spyder.gather()
 
         links = spyder.getList()
 
         for link in links:
+            browser.open(self.url)
             browser.follow_link(link)
             self.findXssInCurrentPage(browser)
-
 
     def findXssInCurrentPage(self, browser):
         # if there is more than one form in one page, we got to try them all.
@@ -53,7 +50,10 @@ class XssFinder:
 
         fieldNames = self.getAllFieldNamesFromAForm(form)
         for fields in fieldNames:
-            form[fields] = xssFailureTestString
+            try:
+                form[fields] = xssFailureTestString
+            except:
+                pass
 
         xssUrlBeforeTest = browser.url
         browser.submit_form(form)
@@ -105,4 +105,5 @@ class XssFinder:
         return fieldNames
 
 
-
+    def getListOfLinks(self):
+        return self.listOfLinks

@@ -33,7 +33,6 @@ class Spyder:
         href = link.get("href")
         for tags in self.list:
             if (href in tags.get("href")):
-                var = tags.get("href")
                 return True
             else:
                 return False
