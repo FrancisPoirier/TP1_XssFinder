@@ -1,7 +1,7 @@
 from robobrowser import RoboBrowser
-import string
+from Spyder import Spyder
 
-class InFormsXssFinder:
+class XssFinder:
 
     def __init__(self, url):
         self.url = url
@@ -15,33 +15,19 @@ class InFormsXssFinder:
 
         browser.open(self.url)
 
-        #links = browser.follow_link("")
+        self.goThroughAvailableHyperlinks(browser)
 
-        #Code to travel all links
-        failures = self.goThroughAvailableHyperlinks(browser, browser.url)
-        var = 1
+    def goThroughAvailableHyperlinks(self, browser):
+        #Use Spyder to get links of the website we want to analyse
+        NUMBER_OF_PAGE_TO_CRAWL = 5
+        spyder = Spyder(self.url, NUMBER_OF_PAGE_TO_CRAWL)
+        spyder.gather()
 
-    #Recursive
-    #Pas fini
-    def goThroughAvailableHyperlinks(self, browser, previousHref):
+        links = spyder.getList()
 
-        if (len(browser.get_links()) == 0):
-            # self.findXssInCurrentPage()
-            # return the number of xss failures found
-            pass
-        else:
-            links = browser.get_links()
-            for elements in links:
-                #traitement de string
-                #href = self.getHref(elements)
-
-                #Ouvre un nouveau lien
-
-                browser.follow_link(elements)
-
-                currentHref = self.getHref(elements)
-
-                self.goThroughAvailableHyperlinks(browser, currentHref)
+        for link in links:
+            browser.follow_link(link)
+            self.findXssInCurrentPage(browser)
 
 
     def findXssInCurrentPage(self, browser):
@@ -49,47 +35,53 @@ class InFormsXssFinder:
         forms = browser.get_forms()
         formCount = len(forms)
 
+        activeUrl = browser.url
+
         if (formCount >= 1):
 
             for form in forms:
 
                 # Code to treat XSS
                 self.findXssFailuresInAForm(browser, form)
+                browser.open(activeUrl)
 
-        else:
-            # Code to change page and get new forms
-            pass
 
     def findXssFailuresInAForm(self, browser, form):
         xssFailureTestString = '<script>alert("bonjour")</script>'
 
         fieldNames = self.getAllFieldNamesFromAForm(form)
-
         for fields in fieldNames:
             form[fields] = xssFailureTestString
 
+        xssUrlBeforeTest = browser.url
         browser.submit_form(form)
-        browser.update_state()
         response = str(browser.response._content)
 
         if (xssFailureTestString in response):
-            requestType = browser.response.request.method
+            requestType = str(browser.response.request.method) ##Demeter is proud.
+            formAction = form.action
+            self.saveXssFailures(xssUrlBeforeTest, formAction, requestType)
+
+
+
+    ###Register the failures in a list under the wanted format
+    def saveXssFailures(self, failingUrl, formAction, requestType):
+        if (self.isInTheList(failingUrl, formAction, requestType) == False):
+            toSave = [failingUrl, formAction, requestType]
+            self.listOfLinks.append(toSave)
+
+
+    ###Test if the failure found isn't already in the list
+    def isInTheList(self, failingUrl, formAction, requestType):
+        combination = [failingUrl, formAction, requestType]
+        if (len(self.listOfLinks) == 0):
+            return False
         else:
-            pass
-
-
-        # Gets the correct string format to proceed
-    def getHref(self, linkToFormat):
-
-        href = linkToFormat.get("href")
-        if (href.startswith("../")):
-            link = href[2:]
-        elif (href.startswith("/") == False):
-            link = "/" + href
-        else:
-            link = href
-
-        return link
+            for failures in self.listOfLinks:
+                if failures == combination:
+                    return True
+                else:
+                    return False
 
 
         #Return a list with the html attribute "name=" of all elements of the form.

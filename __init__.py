@@ -1,6 +1,6 @@
 import sys
-from InFormsXssFinder import InFormsXssFinder
-from UrlXssFinder import UrlXssFinder
+from XssFinder import XssFinder
+
 
 def main():
 
@@ -14,8 +14,8 @@ def main():
         sys.stderr.write("First parameter must be '-url' followed by a valid login url.")
         sys.exit(1)
 
-    inFormXssFinder = InFormsXssFinder(url)
-    inFormXssFinder.findXss()
+    xssFinder = XssFinder(url)
+    xssFinder.findXss()
 
 if __name__ == "__main__":
     main()
